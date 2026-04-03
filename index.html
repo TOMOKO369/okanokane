@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kakeibo Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#3c3914",
+                        "on-primary-container": "#00594d",
+                        "surface-container-low": "#fffadf",
+                        "primary": "#007163",
+                        "on-secondary-container": "#6b374a",
+                        "secondary-dim": "#7f475b",
+                        "surface-container-highest": "#f1eba6",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#785a7e",
+                        "error-container": "#fb5151",
+                        "primary-container": "#8deedb",
+                        "on-error-container": "#570008",
+                        "secondary": "#8d5367",
+                        "on-secondary-fixed": "#552437",
+                        "tertiary-dim": "#6c4e71",
+                        "on-tertiary-fixed": "#4f3455",
+                        "secondary-fixed-dim": "#f7b0c7",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#fffbff",
+                        "error-dim": "#9f0519",
+                        "outline": "#868256",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c0bb8a",
+                        "on-tertiary-fixed-variant": "#6d4f72",
+                        "primary-fixed": "#8deedb",
+                        "on-tertiary-container": "#634668",
+                        "on-secondary-fixed-variant": "#764053",
+                        "secondary-container": "#ffc1d4",
+                        "secondary-fixed": "#ffc1d4",
+                        "on-primary-fixed": "#00443b",
+                        "tertiary-fixed-dim": "#ebc5ef",
+                        "on-background": "#3c3914",
+                        "inverse-on-surface": "#a39f70",
+                        "surface-tint": "#007163",
+                        "surface-bright": "#fffbff",
+                        "error": "#c0262d",
+                        "tertiary-fixed": "#fad3fd",
+                        "surface-container-high": "#f7f0b0",
+                        "inverse-surface": "#100f00",
+                        "surface-dim": "#ece59e",
+                        "primary-fixed-dim": "#7fe0cd",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#9bfde9",
+                        "primary-dim": "#006457",
+                        "tertiary-container": "#fad3fd",
+                        "on-primary-fixed-variant": "#006457",
+                        "background": "#fffbff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#69663c",
+                        "surface-variant": "#f1eba6",
+                        "surface-container": "#fcf6b9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { min-height: max(884px, 100dvh); }
+        
+        /* Modal Transition Utilities */
+        .modal-enter { opacity: 0; }
+        .modal-enter-active { opacity: 1; transition: opacity 300ms ease-out; }
+        .modal-leave { opacity: 1; }
+        .modal-leave-active { opacity: 0; transition: opacity 200ms ease-in; }
+        
+        .modal-panel-enter { transform: translateY(100%); }
+        .modal-panel-enter-active { transform: translateY(0); transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal-panel-leave { transform: translateY(0); }
+        .modal-panel-leave-active { transform: translateY(100%); transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32 relative">
+
+<!-- Input Modal/BottomSheet -->
+<div id="addModal" class="fixed inset-0 z-[100] hidden flex-col justify-end sm:justify-center sm:items-center" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Background backdrop -->
+    <div id="modalBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 transition-opacity duration-300" aria-hidden="true" onclick="closeModal()"></div>
+    
+    <!-- Modal panel -->
+    <div id="modalContent" class="relative bg-surface w-full sm:max-w-md rounded-t-[2rem] sm:rounded-3xl p-6 shadow-2xl transform translate-y-full transition-transform duration-300 ease-out z-[101]">
+        <div class="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mb-6 cursor-pointer" onclick="closeModal()"></div>
+        <h2 id="modal-title" class="text-2xl font-bold text-on-surface mb-6 font-['Plus_Jakarta_Sans']">Add Record</h2>
+        
+        <form id="transactionForm" onsubmit="submitForm(event)" class="space-y-4">
+            <!-- Type Switch -->
+            <div class="flex bg-surface-container p-1 rounded-xl">
+                <label class="flex-1 text-center py-2 rounded-lg cursor-pointer bg-primary text-on-primary font-bold text-sm transition-colors" id="labelExpense" onclick="setType('expense')">Expense</label>
+                <label class="flex-1 text-center py-2 rounded-lg cursor-pointer text-on-surface-variant font-bold text-sm transition-colors" id="labelIncome" onclick="setType('income')">Income</label>
+            </div>
+            <input type="hidden" id="type" name="type" value="expense">
+
+            <!-- Date -->
+            <div>
+                <label class="block text-xs font-bold text-on-surface-variant mb-1">Date</label>
+                <input type="date" id="date" name="date" required class="w-full bg-surface-container-lowest border-0 rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary outline-none">
+            </div>
+
+            <!-- Amount -->
+            <div>
+                <label class="block text-xs font-bold text-on-surface-variant mb-1">Amount (¥)</label>
+                <input type="number" id="amount" name="amount" required min="1" placeholder="0" class="w-full text-2xl font-bold bg-surface-container-lowest border-0 rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary outline-none placeholder:text-stone-300">
+            </div>
+
+            <!-- Category -->
+            <div id="categoryWrapper">
+                <label class="block text-xs font-bold text-on-surface-variant mb-1">Category</label>
+                <select id="category" name="category" required class="w-full bg-surface-container-lowest border-0 rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary outline-none appearance-none">
+                    <option value="" disabled selected>Select category</option>
+                    <option value="Food & Drink">Food & Drink</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Leisure">Leisure</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+
+            <!-- Note/Memo -->
+            <div>
+                <label class="block text-xs font-bold text-on-surface-variant mb-1">Note (Optional)</label>
+                <input type="text" id="note" name="note" placeholder="Where, what..." class="w-full bg-surface-container-lowest border-0 rounded-xl p-4 text-on-surface focus:ring-2 focus:ring-primary outline-none">
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold rounded-xl p-4 shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span class="material-symbols-outlined" id="submitIcon">check_circle</span>
+                    <span id="submitText">Save Transaction</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<header class="bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl rounded-b-[3rem] w-full sticky top-0 z-50 shadow-sm shadow-emerald-900/5 flex items-center justify-between px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-emerald-700 dark:text-emerald-400">menu</span>
+<h1 class="text-2xl font-extrabold text-emerald-800 dark:text-emerald-300 font-['Plus_Jakarta_Sans'] tracking-tight">Kakeibo</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container flex items-center justify-center">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="minimalist pastel illustration of a friendly user character with a soft warm lighting aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmJE-8k9B_8lHbjgD7neVqbYc1Pt_TRdPMKicPjnuI22PK38mfkG-9vRewG4PeKio0JiH1tIpl9YEPtFZU-uk2bX66YpgLBh9g-L8WeUShfOVwaXGE4t0v_ZPyftkpJwGYpFDpp-K94aOiSxXYhEFb-Ea3nGoRGvIKCsVs-ZkSDQLc7ZLDzPacbjwFpa9rkb85mJoD4rctKbBTuH3TrHwZtMGvquOQufbZPO6cYmlIbhoN8qI8JDrIUu6FdBETMIvzzPmjwmWZRA"/>
+</div>
+</header>
+
+<!-- Main content start -->
+<main class="px-6 pt-8 space-y-8 max-w-2xl mx-auto">
+<section class="space-y-4">
+<div class="flex items-baseline justify-between">
+<h2 class="text-label-md font-semibold text-on-surface-variant opacity-70">October Balance</h2>
+<span class="text-primary font-bold text-xs bg-primary-container/30 px-3 py-1 rounded-full">Active Month</span>
+</div>
+<div class="relative bg-surface-container-low rounded-xl p-8 overflow-hidden shadow-[0_-8px_24px_rgba(60,57,20,0.04)]">
+<div class="absolute -top-12 -right-12 w-40 h-40 bg-secondary-container opacity-20 rounded-full blur-3xl"></div>
+<div class="relative z-10">
+<p class="text-display-lg text-4xl font-extrabold tracking-tighter text-on-surface">¥245,800</p>
+<div class="mt-6 grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-lg flex flex-col gap-1">
+<span class="text-[10px] font-bold uppercase tracking-wider text-primary">Income</span>
+<span class="text-lg font-bold text-on-surface">¥312,000</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg flex flex-col gap-1">
+<span class="text-[10px] font-bold uppercase tracking-wider text-secondary">Expenses</span>
+<span class="text-lg font-bold text-on-surface">¥66,200</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-surface-container rounded-xl p-6 flex flex-col items-center justify-center space-y-4">
+<h3 class="w-full text-left font-bold text-on-surface">Category Split</h3>
+<div class="relative w-40 h-40 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-low" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="14"></circle>
+<circle class="text-secondary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="110" stroke-width="14"></circle>
+<circle class="text-primary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="330" stroke-width="14"></circle>
+<circle class="text-tertiary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="400" stroke-width="14"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-xs font-bold text-on-surface-variant">Spent</span>
+<span class="text-lg font-bold">21%</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-2 w-full text-[11px] font-semibold">
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-secondary"></div>Food &amp; Drink</div>
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-primary"></div>Transport</div>
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-tertiary"></div>Leisure</div>
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-outline-variant"></div>Others</div>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-xl p-6 flex flex-col justify-between relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="font-bold text-on-surface mb-2">Savings Goal</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">You're doing great! You've saved 85% of your target this month.</p>
+</div>
+<div class="mt-8 space-y-2 relative z-10">
+<div class="flex justify-between text-[10px] font-bold uppercase text-on-surface-variant">
+<span>New Laptop</span>
+<span>85%</span>
+</div>
+<div class="w-full h-4 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-emerald-600 to-teal-300 w-[85%] rounded-full"></div>
+</div>
+</div>
+<div class="absolute -bottom-6 -right-6 opacity-10">
+<span class="material-symbols-outlined text-8xl" style="font-variation-settings: 'FILL' 1;">savings</span>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-on-surface">Recent Transactions</h3>
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:opacity-80 transition-opacity">
+                    See All <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg transition-transform active:scale-95 duration-150">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary-container rounded-full flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Starbucks Coffee</p>
+<p class="text-[11px] text-on-surface-variant">Today, 09:15 AM</p>
+</div>
+</div>
+<span class="font-bold text-on-surface">-¥650</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-lg transition-transform active:scale-95 duration-150">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">directions_subway</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Tokyo Metro</p>
+<p class="text-[11px] text-on-surface-variant">Yesterday, 06:30 PM</p>
+</div>
+</div>
+<span class="font-bold text-on-surface">-¥210</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg transition-transform active:scale-95 duration-150">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-tertiary-container rounded-full flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Uniqlo Shibuya</p>
+<p class="text-[11px] text-on-surface-variant">24 Oct, 02:45 PM</p>
+</div>
+</div>
+<span class="font-bold text-on-surface">-¥4,990</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Main content end -->
+
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-end px-4 pb-6 pt-2 bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl rounded-t-[3rem] shadow-[0_-8px_24px_rgba(60,57,20,0.08)]">
+<button class="flex flex-col items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-300 text-white rounded-full p-3 mb-2 transform -translate-y-2 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold tracking-wide">Home</span>
+</button>
+<!-- Add button uses onclick="openModal()" -->
+<button onclick="openModal()" class="flex flex-col items-center justify-center text-stone-400 p-2 hover:text-emerald-500 transition-colors active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold tracking-wide">Add</span>
+</button>
+
+<button class="flex flex-col items-center justify-center text-stone-400 p-2 hover:text-emerald-500 transition-colors active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold tracking-wide">History</span>
+</button>
+<button class="flex flex-col items-center justify-center text-stone-400 p-2 hover:text-emerald-500 transition-colors active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-semibold tracking-wide">Settings</span>
+</button>
+</nav>
+
+<script>
+    // Set today's date as default
+    document.getElementById('date').valueAsDate = new Date();
+
+    function openModal() {
+        const modal = document.getElementById('addModal');
+        const backdrop = document.getElementById('modalBackdrop');
+        const modalContent = document.getElementById('modalContent');
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        // Small delay to allow display block to apply before animating opacity/transform
+        setTimeout(() => {
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            modalContent.classList.remove('translate-y-full');
+            modalContent.classList.add('translate-y-0');
+        }, 10);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('addModal');
+        const backdrop = document.getElementById('modalBackdrop');
+        const modalContent = document.getElementById('modalContent');
+        
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+        modalContent.classList.remove('translate-y-0');
+        modalContent.classList.add('translate-y-full');
+        
+        // Wait for CSS transitions to finish before hiding the modal block
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            
+            // Reset form when closed
+            document.getElementById('transactionForm').reset();
+            document.getElementById('date').valueAsDate = new Date();
+            setType('expense');
+            
+            // Reset button state
+            const icon = document.getElementById('submitIcon');
+            const text = document.getElementById('submitText');
+            icon.innerText = 'check_circle';
+            icon.classList.remove('animate-spin');
+            text.innerText = 'Save Transaction';
+            document.getElementById('submitBtn').disabled = false;
+        }, 300);
+    }
+
+    function setType(type) {
+        document.getElementById('type').value = type;
+        const btnExp = document.getElementById('labelExpense');
+        const btnInc = document.getElementById('labelIncome');
+        const categoryWrapper = document.getElementById('categoryWrapper');
+        const categorySelect = document.getElementById('category');
+        
+        if (type === 'expense') {
+            btnExp.className = 'flex-1 text-center py-2 rounded-lg cursor-pointer bg-primary text-on-primary font-bold text-sm transition-colors';
+            btnInc.className = 'flex-1 text-center py-2 rounded-lg cursor-pointer text-on-surface-variant font-bold text-sm transition-colors';
+            
+            categoryWrapper.style.display = 'block';
+            categorySelect.required = true;
+        } else {
+            btnInc.className = 'flex-1 text-center py-2 rounded-lg cursor-pointer bg-primary text-on-primary font-bold text-sm transition-colors';
+            btnExp.className = 'flex-1 text-center py-2 rounded-lg cursor-pointer text-on-surface-variant font-bold text-sm transition-colors';
+            
+            categoryWrapper.style.display = 'none';
+            categorySelect.required = false;
+        }
+    }
+
+    function submitForm(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        const icon = document.getElementById('submitIcon');
+        const text = document.getElementById('submitText');
+        
+        // Set loading state
+        icon.classList.add('animate-spin');
+        icon.innerText = 'progress_activity';
+        text.innerText = 'Saving...';
+        btn.disabled = true;
+
+        const formData = {
+            type: document.getElementById('type').value,
+            date: document.getElementById('date').value,
+            amount: document.getElementById('amount').value,
+            category: document.getElementById('type').value === 'expense' ? document.getElementById('category').value : 'Income',
+            note: document.getElementById('note').value
+        };
+
+        // Call GAS backend function
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run
+                .withSuccessHandler((result) => {
+                    icon.classList.remove('animate-spin');
+                    icon.innerText = 'done';
+                    text.innerText = 'Saved!';
+                    
+                    setTimeout(() => {
+                        closeModal();
+                    }, 1000);
+                })
+                .withFailureHandler((err) => {
+                    alert('エラーが発生しました: ' + err.message);
+                    icon.classList.remove('animate-spin');
+                    icon.innerText = 'error';
+                    text.innerText = 'Error';
+                    btn.disabled = false;
+                })
+                .addTransaction(formData);
+        } else {
+            // Local dev fallback
+            console.log('Test submission:', formData);
+            setTimeout(() => {
+                icon.classList.remove('animate-spin');
+                icon.innerText = 'done';
+                text.innerText = 'Saved!';
+                
+                setTimeout(() => {
+                    closeModal();
+                }, 1000);
+            }, 1000); // simulate network delay
+        }
+    }
+</script>
+</body></html>
